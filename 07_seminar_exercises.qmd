@@ -51,11 +51,12 @@ And set our reticulate environment and working directory.
 
 ```{r}
 # setwd("PATH_TO_GITHUB_REPO")
-setwd("INSERT PATH TO GITHUB REPO")
+setwd("/Users/radhaghate/Programs/me314/seminar07_exercise")
 getwd()
 
 library(reticulate)
-use_python("INSERT PATH TO PYTHON ENVIRON", required = TRUE)
+use_python("/opt/miniconda3/envs/quarto-python/bin/python", required = TRUE)
+#py_config()
 ```
 
 And install the required python packages.
@@ -109,7 +110,8 @@ str(mtcars_data)
 Let's take our data and try to train a multivariate OLS model with `mpg` as the response and `wt` and `hp` as our explanatory variables.
 
 ```{r}
-lm_model <- lm(formula = __, data = __, na.action = na.fail)
+#lm_model <- lm(formula = __, data = __, na.action = na.fail)
+lm_model <- lm(mpg ~ wt + hp, data = mtcars_data, na.action = na.fail)
 lm_model
 ```
 
@@ -256,7 +258,7 @@ y = iris.target[mask] - 1   # 0 = Versicolor, 1 = Virginica
 
 # Fit on the entire dataset
 clf = LogisticRegression(solver='liblinear', random_state=42)
-clf.fit(__, __)
+clf.fit(X, y)
 
 # In‑sample predictions & scores
 y_pred  = clf.predict(X)
@@ -268,11 +270,11 @@ print("Confusion matrix (in‑sample):")
 print(f" TN={tn}, FP={fp}, FN={fn}, TP={tp}\n")
 
 # Manual metric calculations
-accuracy    = (__ + __) / (__ + __ + __ + __)
-precision   = __ / (__ + __) if (__ + __) else 0.0
-recall      = __ / (__ + __) if (__ + __) else 0.0
-specificity = __ / (__ + __) if (__ + __) else 0.0
-f1          = 2 * (__ * __) / (__ + __) if (__ + __) else 0.0
+accuracy    = (tp + tn) / (tn + tn + fp + fn)
+precision   = tp / (tp + fp) if (tp + fp) else 0.0
+recall      = tp / (tp + fn) if (tp + fn) else 0.0
+specificity = tn / (tn + fp) if (tn + fp) else 0.0
+f1          = 2 * (precision * recall) / (precision + recall) if (precision + recall) else 0.0
 
 print(f"Accuracy    = {accuracy:.3f}")
 print(f"Precision   = {precision:.3f}")
@@ -324,7 +326,7 @@ X, y = make_classification(
 
 # Fit on the entire dataset
 clf = LogisticRegression(solver='liblinear', random_state=42)
-clf.fit(__, __)
+clf.fit(X, y)
 
 # In‑sample predictions & scores
 y_pred  = clf.predict(X)
@@ -337,13 +339,13 @@ print(f" TN={tn}, FP={fp}, FN={fn}, TP={tp}\n")
 ```
 
 
-```{r}
+```{python}
 # Manual metric calculations
-accuracy    = (__ + __) / (__ + __ + __ + __)
-precision   = __ / (__ + __) if (__ + __) else 0.0
-recall      = __ / (__ + __) if (__ + __) else 0.0
-specificity = __ / (__ + __) if (__ + __) else 0.0
-f1          = 2 * (__ * __) / (__ + __) if (__ + __) else 0.0
+accuracy    = (tp + tn) / (tn + tn + fp + fn)
+precision   = tp / (tp + fp) if (tp + fp) else 0.0
+recall      = tp / (tp + fn) if (tp + fn) else 0.0
+specificity = tn / (tn + fp) if (tn + fp) else 0.0
+f1          = 2 * (precision * recall) / (precision + recall) if (precision + recall) else 0.0
 
 print(f"Accuracy    = {accuracy:.3f}")
 print(f"Precision   = {precision:.3f}")
@@ -385,11 +387,13 @@ Please load the `math_student.csv` file in this seminar's github repo with the `
 ```{r}
 # Load Data for regression in R
 # Enter code here
-math_student <- read.csv("data/math_student.csv", sep = ",", header = TRUE) %>%
-__(-__)
+library(tidyverse)
 
-__(math_student, 6)
-__(math_student)
+math_student <- read.csv("/Users/radhaghate/Programs/me314/seminar07_exercise/Data/math_student.csv", sep = ",", header = TRUE) %>%
+select(-G2)
+
+head(math_student, 6)
+str(math_student)
 ```
 
 Next, transform __all__ character features to factors and use `str()` to re-examine the data. Are all character features converted to factors?
@@ -397,9 +401,9 @@ Next, transform __all__ character features to factors and use `str()` to re-exam
 ```{r}
 # Enter code here
 math_student <- math_student %>%
-  __(across(where(is.character), as.__))
+  mutate(across(where(is.character), as.factor))
 
-__(math_student)
+str(math_student)
 ```
 
 
@@ -417,7 +421,7 @@ Here, we will use R to perform regression on a continuous outcome (the final gra
 To establish a baseline for model performance, we're going to predict with the mean value of `G3,` our response variable, and calculate the RMSE by hand. The models that follow this therefore illustrate the effect of including additional information from features into our modelling and prediction process.
 
 ```{r}
-mean_G3    <- mean(__)
+mean_G3    <- mean(math_student$G3)
 
 # Build constant predictions (same length as data)
 preds_mean <- rep(mean_G3, nrow(math_student))
@@ -428,7 +432,7 @@ errors <- math_student$G3 - preds_mean
 mean_cont_rmse  <- sqrt(mean(errors^2))
 
 # Report the result
-cat("Baseline (mean) predictor In‑sample RMSE: ", round(__, 2), "\n")
+cat("Baseline (mean) predictor In‑sample RMSE: ", round(mean_cont_rmse, 2), "\n")
 ```
 
 
@@ -440,9 +444,9 @@ We're going to begin with a linear model in the form of multiple linear regressi
 # Enter code here
 # ?lm()
 
-lm_cont <- lm(formula = __, data = math_student)
+lm_cont <- lm(G3 ~ ., data = math_student)
 
-summary(__)
+summary(lm_cont)
 ```
 
 **Question**:
@@ -453,11 +457,11 @@ Next, use the `predict()` function with the `newdata = math_student` argument to
 
 ```{r}
 # Enter code here
-__ <- predict(lm_cont, newdata = __)
+preds_lm_cont <- predict(lm_cont, newdata = math_student)
 
 # Compute in‐sample RMSE
 y_true <- math_student$G3
-lm_cont_rmse <- Metrics::rmse(test_y, preds_lm_cont)
+lm_cont_rmse <- Metrics::rmse(y_true, preds_lm_cont)
 paste0("OLS In-sample RMSE: ", round(lm_cont_rmse, 2))
 ```
 
@@ -474,8 +478,8 @@ lm_poly_int_cont <- lm(
   G3 ~ . 
     + I(absences^2)        # capture non‑linear effect of absences
     + I(studytime^2)       # capture non‑linear effect of study time
-    + __:__,           # interaction of parents' education
-  data = __
+    + Medu:Fedu,           # interaction of parents' education
+  data = math_student
 )
 
 summary(lm_poly_int_cont)
@@ -485,12 +489,12 @@ We now have our model which includes polynomials and interactions. Predict in-sa
 
 ```{r}
 # In‐sample predictions & RMSE
-preds_lm_poly_int <- predict(__, newdata = __)
-lm_nonl_int_cont_rmse   <- Metrics::rmse(math_student$G3, __)
+preds_lm_poly_int <- predict(lm_poly_int_cont, newdata = math_student)
+lm_nonl_int_cont_rmse   <- Metrics::rmse(math_student$G3, preds_lm_poly_int)
 
 cat(
   "Polynomial+Interaction OLS In‑sample RMSE: ", 
-  round(__, 2), "\n"
+  round(lm_nonl_int_cont_rmse, 2), "\n"
 )
 ```
 
@@ -519,11 +523,11 @@ What value do we use for the `alpha` argument when we call the `glmnet()` functi
 library(glmnet)
 ?glmnet()
 
-lasso_cont <- glmnet(math_student_matrix, train_y, alpha = __)
+lasso_cont <- glmnet(math_student_matrix, y, alpha = 1)
 
 plot(lasso_cont)
 
-coef(__, s = 1.0)
+coef(lasso_cont, s = 1.0)
 ```
 
 **Questions**:
@@ -537,13 +541,15 @@ coef(__, s = 1.0)
 Now it's time to make some predictions with our LASSO model and evaluate it's performance! We're going to be using a `lambda` value of 1 for the sake of today's seminar. However, the argument is not called `lambda` in the function! Tomorrow, we'll learn how to identify the best value of lambda when we optimise our hyperparameters. Similar to before with our linear regression, use the `predict()` function with `newx = math_student_matrix` and make sure the object, named `preds_lasso_cont`, is a numeric vector. 
 
 ```{r}
-preds_lasso_cont <- predict(__, newx = __, s = 1.0) %>%
+preds_lasso_cont <- predict(lasso_cont, newx = math_student_matrix, s = 1.0) %>%
                     as.vector() 
 
-
-lasso_cont_rmse <- rmse(__, __)
+class(preds_lasso_cont)
+lasso_cont_rmse <- rmse(y, preds_lasso_cont)
 
 paste0("LASSO in-sample RMSE is ", lasso_cont_rmse)
+
+#ERRORS IN THIS CELL
 ```
 
 

@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Seminar 7: Core Machine Learning 1</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="07_seminar_exercises_files/libs/clipboard/clipboard.min.js"></script>
+<script src="07_seminar_exercises_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="07_seminar_exercises_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="07_seminar_exercises_files/libs/quarto-html/popper.min.js"></script>
+<script src="07_seminar_exercises_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="07_seminar_exercises_files/libs/quarto-html/anchor.min.js"></script>
+<link href="07_seminar_exercises_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="07_seminar_exercises_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="07_seminar_exercises_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="07_seminar_exercises_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="07_seminar_exercises_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#plan-for-today" id="toc-plan-for-today" class="nav-link active" data-scroll-target="#plan-for-today">Plan for Today</a>
+  <ul class="collapse">
+  <li><a href="#part-1-intro-to-ml-labelled-and-unlabelled-data" id="toc-part-1-intro-to-ml-labelled-and-unlabelled-data" class="nav-link" data-scroll-target="#part-1-intro-to-ml-labelled-and-unlabelled-data">Part 1: Intro to ML: Labelled and Unlabelled Data</a></li>
+  <li><a href="#part-2-model-evaluation" id="toc-part-2-model-evaluation" class="nav-link" data-scroll-target="#part-2-model-evaluation">Part 2: Model Evaluation</a></li>
+  <li><a href="#part-3-load-and-inspect-data" id="toc-part-3-load-and-inspect-data" class="nav-link" data-scroll-target="#part-3-load-and-inspect-data">Part 3: Load and Inspect Data</a></li>
+  <li><a href="#part-3-regression-continuous-outcome-prediction" id="toc-part-3-regression-continuous-outcome-prediction" class="nav-link" data-scroll-target="#part-3-regression-continuous-outcome-prediction">Part 3: Regression (Continuous Outcome Prediction)</a>
+  <ul class="collapse">
+  <li><a href="#predicting-with-the-mean" id="toc-predicting-with-the-mean" class="nav-link" data-scroll-target="#predicting-with-the-mean">3.1 Predicting with the mean</a></li>
+  <li><a href="#multiple-linear-regression" id="toc-multiple-linear-regression" class="nav-link" data-scroll-target="#multiple-linear-regression">3.2 Multiple Linear Regression</a></li>
+  <li><a href="#ols-with-nonlinearities-and-interactions" id="toc-ols-with-nonlinearities-and-interactions" class="nav-link" data-scroll-target="#ols-with-nonlinearities-and-interactions">3.3 OLS with nonlinearities and interactions</a></li>
+  <li><a href="#lasso-regression" id="toc-lasso-regression" class="nav-link" data-scroll-target="#lasso-regression">3.4 LASSO Regression</a></li>
+  <li><a href="#model-selection" id="toc-model-selection" class="nav-link" data-scroll-target="#model-selection">3.5 Model Selection</a></li>
+  </ul></li>
+  <li><a href="#part-4-classification-binary-classification" id="toc-part-4-classification-binary-classification" class="nav-link" data-scroll-target="#part-4-classification-binary-classification">Part 4: Classification (Binary Classification)</a>
+  <ul class="collapse">
+  <li><a href="#logistic-regression" id="toc-logistic-regression" class="nav-link" data-scroll-target="#logistic-regression">4.1 Logistic Regression</a></li>
+  <li><a href="#logistic-regression-w-polynomials-and-interaction" id="toc-logistic-regression-w-polynomials-and-interaction" class="nav-link" data-scroll-target="#logistic-regression-w-polynomials-and-interaction">4.2 Logistic Regression w/ Polynomials and Interaction</a></li>
+  <li><a href="#naïve-bayes" id="toc-naïve-bayes" class="nav-link" data-scroll-target="#naïve-bayes">4.3 Naïve Bayes</a></li>
+  <li><a href="#model-selection-1" id="toc-model-selection-1" class="nav-link" data-scroll-target="#model-selection-1">4.4 Model Selection</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#by-the-end-of-this-seminar-you-should-be-able-to" id="toc-by-the-end-of-this-seminar-you-should-be-able-to" class="nav-link" data-scroll-target="#by-the-end-of-this-seminar-you-should-be-able-to">By the end of this seminar, you should be able to:</a>
+  <ul class="collapse">
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Seminar 7: Core Machine Learning 1</h1>
+<p class="subtitle lead">LSE ME314: Introduction to Data Science and Machine Learning</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">July 15, 2025</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="plan-for-today" class="level1">
+<h1>Plan for Today</h1>
+<p>Today, we’re going to learn how to train supervised ML models for classification and regression. First, we will motivate prediction with ML as a ‘missing data’ problem. Next, we will focus on evaluation metrics and develop an understanding of the promises and pitfalls of different evaluation metrics and their suitability to different contexts. After this, we will look a simple ‘regression’ and ‘classification’ tasks and fit some models to achieve these ends.</p>
+<p>The pipelines we will use today are <em>simple</em> by design, and we will begin to build in additional steps to make our classifiers ‘robust’ in the next seminar. Today, we will touch on (1) fitting models, (2) calculating in-sample evaluation metrics, and (3) in-sample model evaluation. Tomorrow, we will look a train/validation/test sets, cross-validation, regularisation, and other facets of robust ML.</p>
+<p>First, let’s install and load our required R and python packages.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install all required packages at once</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"tidyverse"</span>, <span class="st">"caret"</span>, <span class="st">"stats"</span>, <span class="st">"glmnet"</span>, </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"e1071"</span>, <span class="st">"pROC"</span>, <span class="st">"ggplot2"</span>, <span class="st">"plotROC"</span>, <span class="st">"reticulate"</span>, <span class="st">"Metrics"</span>, </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"titanic"</span>, <span class="st">"rpart"</span>, <span class="st">"mlbench"</span>, <span class="st">"patchwork"</span>, <span class="st">"rpart.plot"</span>, <span class="st">"MLmetrics"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load all libraries in one go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stats)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(e1071)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pROC)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plotROC)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Metrics)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(titanic)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mlbench)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart.plot)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MLmetrics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And set our reticulate environment and working directory.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># setwd("PATH_TO_GITHUB_REPO")</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/Users/radhaghate/Programs/me314/seminar07_exercise"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">getwd</span>()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">use_python</span>(<span class="st">"/opt/miniconda3/envs/quarto-python/bin/python"</span>, <span class="at">required =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">py_config</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And install the required python packages.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install all required Python packages </span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> subprocess</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Starting installation of Python packages..."</span>, flush<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>subprocess.check_call([</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    sys.executable, <span class="st">"-m"</span>, <span class="st">"pip"</span>, <span class="st">"install"</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"numpy"</span>, <span class="st">"pandas"</span>, <span class="st">"matplotlib"</span>, <span class="st">"seaborn"</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"scikit-learn"</span>, <span class="st">"pyLDAvis"</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Ending installation of Python packages..."</span>, flush<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sklearn</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn <span class="im">import</span> metrics</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyLDAvis</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"All Python packages imported successfully."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="part-1-intro-to-ml-labelled-and-unlabelled-data" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-intro-to-ml-labelled-and-unlabelled-data">Part 1: Intro to ML: Labelled and Unlabelled Data</h2>
+<p>To get us familiar with the use cases for ML, we examine ML within the framework of a ‘missing data’ problem. We treat unknown response values as <em>truly missing</em> and use predictive models to <strong>impute</strong> those missing Y values from the observed feature values, rather than discarding or naively filling them.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mtcars_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/mtcars_missing.csv"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(mtcars_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s take our data and try to train a multivariate OLS model with <code>mpg</code> as the response and <code>wt</code> and <code>hp</code> as our explanatory variables.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#lm_model &lt;- lm(formula = __, data = __, na.action = na.fail)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>lm_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">data =</span> mtcars_data, <span class="at">na.action =</span> na.fail)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>lm_model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We just tried to train mpg ~ wt + hp, but got an error because some mpg values are missing. This illustrates a key distinction: We can fit supervised learning models of data when we know <code>Y.</code> This data is called ‘labelled’ data. We cannot directly train supervised learning models on data where we don’t have the response labelled (such as when <code>Y = NA</code>). In ML, we often cast prediction as a <em>missing data</em> problem - we train models to fill in the Ys that we don’t observe with the Xs we do.</p>
+<p>Let’s remove the NA rows, train a model, then use said model to predict on our unlabelled rows.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mtcars_labelled <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(mtcars_data)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit OLS on complete cases</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>lm_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">data =</span> mtcars_labelled)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lm_model)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the rows we dropped (the unlabelled set)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>unlabelled_idx <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">is.na</span>(mtcars_data<span class="sc">$</span>mpg))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>unlabelled_df <span class="ot">&lt;-</span> mtcars_data[unlabelled_idx, ]</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict mpg for those missing rows</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>predicted_mpg <span class="ot">&lt;-</span> <span class="fu">predict</span>(lm_model, <span class="at">newdata =</span> unlabelled_df)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the imputations</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">car =</span> <span class="fu">rownames</span>(unlabelled_df),</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">predicted_mpg =</span> <span class="fu">round</span>(predicted_mpg, <span class="dv">2</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Assuming our model is good enough, this solves the missing data problem! How, however, do we know if our model is good?</p>
+</section>
+<section id="part-2-model-evaluation" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-model-evaluation">Part 2: Model Evaluation</h2>
+<p>Data scientists and ML practitioners evaluate models using a variety of metrics, each targeting different aspects of model performance. Depending on the application, some parts of the prediction space may matter more than others. For example, a loan provider might be more concerned about approving a loan to someone who cannot repay (a <em>false positive</em>) than about mistakenly rejecting a creditworthy applicant (a <em>false negative</em>). In such cases, they may prioritize <em>precision</em> over <em>recall</em> — or, equivalently, aim for a <em>low false positive rate</em> (high <em>specificity</em>). Different contexts call for different evaluation priorities, and we can integrate these preferences directly into our training pipelines so that ML models optimize for them explicitly.</p>
+<p>For classification tasks, the most common evaluation metrics are:</p>
+<ul>
+<li><p><strong>Accuracy</strong><br>
+- The fraction of total predictions that are correct:<br>
+<span class="math display">\[
+\frac{TP + TN}{TP + TN + FP + FN}
+\]</span></p></li>
+<li><p><strong>F1‑Score</strong><br>
+- Harmonic mean of precision and recall:<br>
+<span class="math display">\[
+2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+\]</span></p></li>
+<li><p><strong>Precision</strong> (Positive Predictive Value)<br>
+- Fraction of predicted positives that are true positives:<br>
+<span class="math display">\[
+\frac{TP}{TP + FP}
+\]</span></p></li>
+<li><p><strong>Recall</strong> (Sensitivity, True Positive Rate)<br>
+- Fraction of actual positives that are correctly identified:<br>
+<span class="math display">\[
+\frac{TP}{TP + FN}
+\]</span></p></li>
+<li><p><strong>Specificity</strong> (True Negative Rate)<br>
+- Fraction of actual negatives that are correctly identified:<br>
+<span class="math display">\[
+\frac{TN}{TN + FP}
+\]</span></p></li>
+<li><p><strong>Sensitivity</strong><br>
+- Synonym for recall (True Positive Rate).</p></li>
+<li><p><strong>ROC‑AUC</strong><br>
+- Area under the ROC curve, measuring discrimination across all thresholds<br>
+(i.e., the probability that a randomly chosen positive instance is ranked higher than a randomly chosen negative instance).</p></li>
+</ul>
+<p>To motivate the use of different evaluation metrics, I provide an example below where our ML model is faced with a binary classification task and <strong>always</strong> picks 1 (from 0 or 1). In general, we wouldn’t consider this a ‘good’ model, as it does not use information about our observations (in the form of features) to guide classification.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score, roc_curve, auc</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate data</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>n_samples <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> np.random.randn(n_samples, <span class="dv">2</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> np.random.choice([<span class="dv">1</span>, <span class="dv">0</span>], size<span class="op">=</span>n_samples, p<span class="op">=</span>[<span class="fl">0.9</span>, <span class="fl">0.1</span>])</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Always guesses 1! </span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> np.ones_like(y)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute metrics</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>acc   <span class="op">=</span> accuracy_score(y, y_pred)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>prec  <span class="op">=</span> precision_score(y, y_pred, zero_division<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>rec   <span class="op">=</span> recall_score(y, y_pred)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>f1    <span class="op">=</span> f1_score(y, y_pred)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>auc   <span class="op">=</span> roc_auc_score(y, y_pred)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Accuracy : </span><span class="sc">{</span>acc<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Precision: </span><span class="sc">{</span>prec<span class="sc">:.3f}</span><span class="ss">"</span>) <span class="co"># of all predicted positives, 90.6% are truly positive</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Recall   : </span><span class="sc">{</span>rec<span class="sc">:.3f}</span><span class="ss">"</span>) <span class="co"># We catch all the true positives (but catch none of the negatives)</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"F1 Score : </span><span class="sc">{</span>f1<span class="sc">:.3f}</span><span class="ss">"</span>) <span class="co"># Harmonic mean of precision &amp; recall, deceptively high</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"ROC‑AUC  : </span><span class="sc">{</span>auc<span class="sc">:.3f}</span><span class="ss">"</span>)   <span class="co"># 0.5 → no discrimination ability</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Confusion matrix &amp; specificity</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(y, y_pred, labels<span class="op">=</span>[<span class="dv">0</span>,<span class="dv">1</span>])</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>tn, fp, fn, tp <span class="op">=</span> cm.ravel()</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>specificity <span class="op">=</span> tn <span class="op">/</span> (tn <span class="op">+</span> fp) <span class="cf">if</span> (tn <span class="op">+</span> fp) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">True Negatives (TN): </span><span class="sc">{</span>tn<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"False Positives (FP): </span><span class="sc">{</span>fp<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Specificity: </span><span class="sc">{</span>specificity<span class="sc">:.3f}</span><span class="ss">"</span>)  <span class="co"># Complete lack of ability to detect negatives</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>At first glance the accuracy (0.906), precision (0.906), recall (1.00), and F1-score (0.951) all look extremely strong. If we simply used these metrics to guide our model choice, we might be led to believe this classifier can easily distinguish between positive and negative cases.</p>
+<p><strong>Questions</strong>:</p>
+<ul>
+<li><p>What is the <em>specificity</em> of our model? How do we interpret this?</p></li>
+<li><p>What is the <em>ROC-AUC</em> for our model? How do we interpret this?</p></li>
+</ul>
+<p>Upon inspection of the specificity score (0.00), we notice a complete lack of ability to detect negative cases. Furthermore, our ROC-AUC of 0.5 tells us that our model has no discriminatory ability - it can’t tell the difference between observations that are 0 or 1, because it always guesses 1! The fact that our dataset is highly imbalanced has masked this reality, and the resulting high accuracy score is an artefact of this context.</p>
+<p><strong>Question:</strong></p>
+<ul>
+<li>Would you consider this a ‘good’ model?</li>
+</ul>
+<section id="exercise-1" class="level4">
+<h4 class="anchored" data-anchor-id="exercise-1">Exercise 1</h4>
+<p>Now we’re going to follow our own classification pipeline in python, and calculate evaluation metrics manually. First, we’ll use a balanced dataset. After this, we’ll look at an imbalanced dataset. The <code>tn</code>, <code>fp</code>, <code>fn</code> and <code>tp</code> objects outputted from the <code>confusion_matrix</code> function contain the number of true negatives, false positives, false negatives, and true positives, respectively. Please fill in the missing arguments in the code chunk below and answer the questions that follow.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> load_iris</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> confusion_matrix, roc_curve, auc</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Iris and select only Versicolor vs Virginica</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>iris <span class="op">=</span> load_iris()</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> iris.target <span class="op">!=</span> <span class="dv">0</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> iris.data[mask]</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> iris.target[mask] <span class="op">-</span> <span class="dv">1</span>   <span class="co"># 0 = Versicolor, 1 = Virginica</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit on the entire dataset</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>clf <span class="op">=</span> LogisticRegression(solver<span class="op">=</span><span class="st">'liblinear'</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>clf.fit(X, y)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co"># In‑sample predictions &amp; scores</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>y_pred  <span class="op">=</span> clf.predict(X)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>y_score <span class="op">=</span> clf.predict_proba(X)[:, <span class="dv">1</span>]  <span class="co"># probability for class=1</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Confusion matrix</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>tn, fp, fn, tp <span class="op">=</span> confusion_matrix(y, y_pred, labels<span class="op">=</span>[<span class="dv">0</span>,<span class="dv">1</span>]).ravel()</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion matrix (in‑sample):"</span>)</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f" TN=</span><span class="sc">{</span>tn<span class="sc">}</span><span class="ss">, FP=</span><span class="sc">{</span>fp<span class="sc">}</span><span class="ss">, FN=</span><span class="sc">{</span>fn<span class="sc">}</span><span class="ss">, TP=</span><span class="sc">{</span>tp<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual metric calculations</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>accuracy    <span class="op">=</span> (TP <span class="op">+</span> TN) <span class="op">/</span> (TP <span class="op">+</span> TN <span class="op">+</span> FP <span class="op">+</span> FN)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>precision   <span class="op">=</span> __ <span class="op">/</span> (__ <span class="op">+</span> __) <span class="cf">if</span> (__ <span class="op">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>recall      <span class="op">=</span> __ <span class="op">/</span> (__ <span class="op">+</span> __) <span class="cf">if</span> (__ <span class="op">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>specificity <span class="op">=</span> __ <span class="op">/</span> (__ <span class="op">+</span> __) <span class="cf">if</span> (__ <span class="op">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>f1          <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> (__ <span class="op">*</span> __) <span class="op">/</span> (__ <span class="op">+</span> __) <span class="cf">if</span> (__ <span class="op">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Accuracy    = </span><span class="sc">{</span>accuracy<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Precision   = </span><span class="sc">{</span>precision<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Recall      = </span><span class="sc">{</span>recall<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Specificity = </span><span class="sc">{</span>specificity<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"F1 Score    = </span><span class="sc">{</span>f1<span class="sc">:.3f}</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute ROC curve and AUC in‑sample</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>fpr, tpr, thresholds <span class="op">=</span> roc_curve(y, y_score, pos_label<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>roc_auc <span class="op">=</span> auc(fpr, tpr)</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"AUC (ROC)   = </span><span class="sc">{</span>roc_auc<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>plt.plot(fpr, tpr, label<span class="op">=</span><span class="ss">f'ROC (AUC = </span><span class="sc">{</span>roc_auc<span class="sc">:.3f}</span><span class="ss">)'</span>)</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>plt.plot([<span class="dv">0</span>,<span class="dv">1</span>], [<span class="dv">0</span>,<span class="dv">1</span>], <span class="st">'k--'</span>, label<span class="op">=</span><span class="st">'Chance'</span>)</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'False Positive Rate'</span>)</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'True Positive Rate'</span>)</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Receiver Operating Characteristic (In‑Sample)'</span>)</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>plt.legend(loc<span class="op">=</span><span class="st">'lower right'</span>)</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Questions:</strong></p>
+<ul>
+<li><p>How do you interpret these results? Is accuracy a good way to evaluate our model on this data?</p></li>
+<li><p>What is the relationship between accuracy and ROC-AUC here? What does this tell us about our chosen decision boundary of 0.5?</p></li>
+</ul>
+<p>Now, let’s try the same thing with a dataset that is class-imbalanced.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_classification</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> confusion_matrix, roc_curve, auc</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate imbalanced data (90% class 0, 10% class 1)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> make_classification(</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    n_samples<span class="op">=</span><span class="dv">1000</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    n_features<span class="op">=</span><span class="dv">20</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    n_informative<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    n_redundant<span class="op">=</span><span class="dv">15</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    n_clusters_per_class<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    weights<span class="op">=</span>[<span class="fl">0.9</span>, <span class="fl">0.1</span>],</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    class_sep<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    flip_y<span class="op">=</span><span class="fl">0.05</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit on the entire dataset</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>clf <span class="op">=</span> LogisticRegression(solver<span class="op">=</span><span class="st">'liblinear'</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>clf.fit(__, __)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co"># In‑sample predictions &amp; scores</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>y_pred  <span class="op">=</span> clf.predict(X)</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>y_score <span class="op">=</span> clf.predict_proba(X)[:, <span class="dv">1</span>]  <span class="co"># probability for class=1</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Confusion matrix (in‑sample)</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>tn, fp, fn, tp <span class="op">=</span> confusion_matrix(y, y_pred, labels<span class="op">=</span>[<span class="dv">0</span>,<span class="dv">1</span>]).ravel()</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion matrix (in‑sample):"</span>)</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f" TN=</span><span class="sc">{</span>tn<span class="sc">}</span><span class="ss">, FP=</span><span class="sc">{</span>fp<span class="sc">}</span><span class="ss">, FN=</span><span class="sc">{</span>fn<span class="sc">}</span><span class="ss">, TP=</span><span class="sc">{</span>tp<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual metric calculations</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>accuracy    <span class="ot">=</span> (__ <span class="sc">+</span> __) <span class="sc">/</span> (__ <span class="sc">+</span> __ <span class="sc">+</span> __ <span class="sc">+</span> __)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>precision   <span class="ot">=</span> __ <span class="sc">/</span> (__ <span class="sc">+</span> __) <span class="cf">if</span> (__ <span class="sc">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>recall      <span class="ot">=</span> __ <span class="sc">/</span> (__ <span class="sc">+</span> __) <span class="cf">if</span> (__ <span class="sc">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>specificity <span class="ot">=</span> __ <span class="sc">/</span> (__ <span class="sc">+</span> __) <span class="cf">if</span> (__ <span class="sc">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>f1          <span class="ot">=</span> <span class="dv">2</span> <span class="sc">*</span> (__ <span class="sc">*</span> __) <span class="sc">/</span> (__ <span class="sc">+</span> __) <span class="cf">if</span> (__ <span class="sc">+</span> __) <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(f<span class="st">"Accuracy    = {accuracy:.3f}"</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(f<span class="st">"Precision   = {precision:.3f}"</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(f<span class="st">"Recall      = {recall:.3f}"</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(f<span class="st">"Specificity = {specificity:.3f}"</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(f<span class="st">"F1 Score    = {f1:.3f}</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute ROC curve and AUC (in‑sample)</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>fpr, tpr, thresholds <span class="ot">=</span> <span class="fu">roc_curve</span>(y, y_score, <span class="at">pos_label=</span><span class="dv">1</span>)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>roc_auc <span class="ot">=</span> <span class="fu">auc</span>(fpr, tpr)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(f<span class="st">"AUC (ROC)   = {roc_auc:.3f}"</span>)</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.figure</span>()</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.plot</span>(fpr, tpr, <span class="at">label=</span>f<span class="st">'ROC (AUC = {roc_auc:.3f})'</span>)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.plot</span>([<span class="dv">0</span>,<span class="dv">1</span>], [<span class="dv">0</span>,<span class="dv">1</span>], <span class="st">'k--'</span>, <span class="at">label=</span><span class="st">'Chance'</span>)</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.xlabel</span>(<span class="st">'False Positive Rate'</span>)</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.ylabel</span>(<span class="st">'True Positive Rate'</span>)</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.title</span>(<span class="st">'ROC Curve (In‑Sample, Imbalanced Data)'</span>)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.legend</span>(<span class="at">loc=</span><span class="st">'lower right'</span>)</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="fu">plt.show</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Questions:</strong></p>
+<ul>
+<li><p>How do you interpret these results?</p></li>
+<li><p>Which evaluation metric would you use given what you know about the data? Why?</p></li>
+</ul>
+</section>
+</section>
+<section id="part-3-load-and-inspect-data" class="level2">
+<h2 class="anchored" data-anchor-id="part-3-load-and-inspect-data">Part 3: Load and Inspect Data</h2>
+<p>We’re going to be working with one dataset for the rest of today. However, we are going to perform transformations to this dataset during the seminar that allow us to explore both classification and regression tasks. This dataset, originally sourced from the UCI Machine Learning Repository, concerns student performance in mathematics. It provides detailed insights into both the academic performance and potentially important socio-demographic characteristics and attributes of students (Cortez &amp; Silva, 2008). Today, we will use information about these students and their behaviours to predict their final grade. We will separate the seminar’s exercise today into R and Python. We will start with R for regression and follow this with Python for binary classification after performing some data transformation on our outcome of interest.</p>
+<p>First, read the ‘About Dataset’ section in: https://www.kaggle.com/datasets/adilshamim8/math-students?resource=download to familiarise yourself with our outcome (G3) and features (Shamim, 2022).</p>
+<p>Please load the <code>math_student.csv</code> file in this seminar’s github repo with the <code>read.csv()</code> R function and remove the second-period grade variable <code>(G2)</code> using the <code>tidyverse</code>. <em>hint</em>: <code>select()</code> should work! Name this dataframe math_student Use <code>head()</code> and <code>str()</code> to examine the structure of the data. What do you notice?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Data for regression in R</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter code here</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>math_student <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/math_student.csv"</span>, <span class="at">sep =</span> <span class="st">","</span>, <span class="at">header =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">__</span>(<span class="sc">-</span>__)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">__</span>(math_student, <span class="dv">6</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">__</span>(math_student)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, transform <strong>all</strong> character features to factors and use <code>str()</code> to re-examine the data. Are all character features converted to factors?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter code here</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>math_student <span class="ot">&lt;-</span> math_student <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">__</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), as.__))</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">__</span>(math_student)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="part-3-regression-continuous-outcome-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="part-3-regression-continuous-outcome-prediction">Part 3: Regression (Continuous Outcome Prediction)</h2>
+<p>Here, we will use R to perform regression on a continuous outcome (the final grades obtained by the students in our dataset). Our objective is to predict our response variable with as minimal error as possible by using information stored in the features.</p>
+<p><em>Note:</em> There will be no train/validation/test splits today. Instead, we will focus on training models with our available data and look at how we can make these models more robust with validation and out-of-sample evaluation in tomorrow’s seminar.</p>
+<p><em>Note:</em> There will be no hyperparameter tuning during today’s seminar, and all hyperparameters will be left at their default value. Tomorrow, we will learn how to optimise these models via hyperparameter tuning with k-fold crossvalidation!</p>
+<section id="predicting-with-the-mean" class="level3">
+<h3 class="anchored" data-anchor-id="predicting-with-the-mean">3.1 Predicting with the mean</h3>
+<p>To establish a baseline for model performance, we’re going to predict with the mean value of <code>G3,</code> our response variable, and calculate the RMSE by hand. The models that follow this therefore illustrate the effect of including additional information from features into our modelling and prediction process.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>mean_G3    <span class="ot">&lt;-</span> <span class="fu">mean</span>(__)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Build constant predictions (same length as data)</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>preds_mean <span class="ot">&lt;-</span> <span class="fu">rep</span>(mean_G3, <span class="fu">nrow</span>(math_student))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>errors <span class="ot">&lt;-</span> math_student<span class="sc">$</span>G3 <span class="sc">-</span> preds_mean</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute in‑sample RMSE for the mean predictor</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>mean_cont_rmse  <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(errors<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Report the result</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Baseline (mean) predictor In‑sample RMSE: "</span>, <span class="fu">round</span>(__, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="multiple-linear-regression" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-linear-regression">3.2 Multiple Linear Regression</h3>
+<p>We’re going to begin with a linear model in the form of multiple linear regression. This can be operationalised in R with a single line of code. Use the <code>lm()</code> function and the formula argument (rather than X and y) to fit a multiple linear regression model below. Name the model <code>lm_cont</code> and examine it’s coefficient with <code>summary()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter code here</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ?lm()</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>lm_cont <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="at">formula =</span> __, <span class="at">data =</span> math_student)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(__)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question</strong>:</p>
+<ul>
+<li>How many of the coefficients are statistically significant?</li>
+</ul>
+<p>Next, use the <code>predict()</code> function with the <code>newdata = math_student</code> argument to make in-sample predictions with your model. Name these predictions <code>preds_lm_cont</code>. Remember, this is predicting on data that your model has already been trained on, so it should perform well! Tomorrow, we look at ‘best practice’ out-of-sample performance. After this, use the <code>rmse()</code> function in the <code>Metrics</code> package to calculate the in-sample RMSE. How well do you think our model did? Assign the rmse value to an object titled <code>lm_cont_rmse</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter code here</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>__ <span class="ot">&lt;-</span> <span class="fu">predict</span>(lm_cont, <span class="at">newdata =</span> __)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute in‐sample RMSE</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>y_true <span class="ot">&lt;-</span> math_student<span class="sc">$</span>G3</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>lm_cont_rmse <span class="ot">&lt;-</span> Metrics<span class="sc">::</span><span class="fu">rmse</span>(test_y, preds_lm_cont)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="fu">paste0</span>(<span class="st">"OLS In-sample RMSE: "</span>, <span class="fu">round</span>(lm_cont_rmse, <span class="dv">2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="ols-with-nonlinearities-and-interactions" class="level3">
+<h3 class="anchored" data-anchor-id="ols-with-nonlinearities-and-interactions">3.3 OLS with nonlinearities and interactions</h3>
+<p>Now, we’re going to induce some nonlinearities, in the form of quadratic transformations, and an interaction between <code>Medu</code> and <code>Fedu.</code> If these complexities exist within the data, we should get improved performance. Name the model <code>lm_poly_int_cont.</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter code here</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ?lm()</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>lm_poly_int_cont <span class="ot">&lt;-</span> <span class="fu">lm</span>(</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  G3 <span class="sc">~</span> . </span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="sc">+</span> <span class="fu">I</span>(absences<span class="sc">^</span><span class="dv">2</span>)        <span class="co"># capture non‑linear effect of absences</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">+</span> <span class="fu">I</span>(studytime<span class="sc">^</span><span class="dv">2</span>)       <span class="co"># capture non‑linear effect of study time</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">+</span> __<span class="sc">:</span>__,           <span class="co"># interaction of parents' education</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> __</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lm_poly_int_cont)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now have our model which includes polynomials and interactions. Predict in-sample and compute the rmse - name the rmse object <code>lm_nonl_int_cont_rmse.</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In‐sample predictions &amp; RMSE</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>preds_lm_poly_int <span class="ot">&lt;-</span> <span class="fu">predict</span>(__, <span class="at">newdata =</span> __)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>lm_nonl_int_cont_rmse   <span class="ot">&lt;-</span> Metrics<span class="sc">::</span><span class="fu">rmse</span>(math_student<span class="sc">$</span>G3, __)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Polynomial+Interaction OLS In‑sample RMSE: "</span>, </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(__, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Questions</strong>:</p>
+<ul>
+<li><p>How many of the additional coefficients are statistically significant?</p></li>
+<li><p>What does our in-sample RMSE compare to the OLS model that did <em>not</em> include nonlinearities and interactions?</p></li>
+</ul>
+</section>
+<section id="lasso-regression" class="level3">
+<h3 class="anchored" data-anchor-id="lasso-regression">3.4 LASSO Regression</h3>
+<p>Now, we’re going to fit and evaluate a LASSO regression model. LASSO penalises the sum of absolute values of coefficients (L1 penalty) to reduce overfitting. Variables that the algorithm deems unimportant will have their coefficient values reduced to 0. For this, we will use the <code>glmnet</code> library.</p>
+<p>To use LASSO regression with <code>glmnet</code>, we need our explanatory variables to be in matrix format. Transform <code>math_student</code> and using the <code>as.matrix()</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert code here</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> math_student<span class="sc">$</span>G3</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>math_student_matrix <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(G3 <span class="sc">~</span> . <span class="sc">-</span><span class="dv">1</span>, <span class="at">data =</span> math_student)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>What value do we use for the <code>alpha</code> argument when we call the <code>glmnet()</code> function? Alpha differentiates between whether we want to use LASSO or ridge regression. Fit a LASSO model using <code>glmnet</code> and name the model <code>lasso_cont</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>?<span class="fu">glmnet</span>()</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>lasso_cont <span class="ot">&lt;-</span> <span class="fu">glmnet</span>(math_student_matrix, train_y, <span class="at">alpha =</span> __)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(lasso_cont)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(__, <span class="at">s =</span> <span class="fl">1.0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Questions</strong>:</p>
+<ul>
+<li><p>Examine the plot generated by <code>plot(lasso_cont)</code>, what is going on here?</p></li>
+<li><p>Which coefficients are good ‘predictors’ of final grade, according to your model where <code>lambda</code> is equal to 1?</p></li>
+<li><p>Would there be more or less non-zero coefficients as you increase the value of <code>lambda</code>?</p></li>
+</ul>
+<p>Now it’s time to make some predictions with our LASSO model and evaluate it’s performance! We’re going to be using a <code>lambda</code> value of 1 for the sake of today’s seminar. However, the argument is not called <code>lambda</code> in the function! Tomorrow, we’ll learn how to identify the best value of lambda when we optimise our hyperparameters. Similar to before with our linear regression, use the <code>predict()</code> function with <code>newx = math_student_matrix</code> and make sure the object, named <code>preds_lasso_cont</code>, is a numeric vector.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>preds_lasso_cont <span class="ot">&lt;-</span> <span class="fu">predict</span>(__, <span class="at">newx =</span> __, <span class="at">s =</span> <span class="fl">1.0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">as.vector</span>() </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>lasso_cont_rmse <span class="ot">&lt;-</span> <span class="fu">rmse</span>(__, __)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">paste0</span>(<span class="st">"LASSO in-sample RMSE is "</span>, lasso_cont_rmse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="model-selection" class="level3">
+<h3 class="anchored" data-anchor-id="model-selection">3.5 Model Selection</h3>
+<p>We now have 4 models to choose from! Which model is the best at predicting students final marks? Compare your rmse objects to decide.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>model_rmse <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Model =</span> <span class="fu">c</span>(<span class="st">"Mean"</span>, <span class="st">"Linear Regression"</span>, <span class="st">"Linear w/ Polys &amp; Ints"</span>, <span class="st">"LASSO"</span>),</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">RMSE =</span> <span class="fu">c</span>(mean_cont_rmse,lm_cont_rmse, lm_nonl_int_cont_rmse, lasso_cont_rmse)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(model_rmse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question</strong>:</p>
+<ul>
+<li>Which model minimises our in-sample RMSE? Why do you think this is?</li>
+</ul>
+</section>
+</section>
+<section id="part-4-classification-binary-classification" class="level2">
+<h2 class="anchored" data-anchor-id="part-4-classification-binary-classification">Part 4: Classification (Binary Classification)</h2>
+<p>For this classification task we’re going to use the same data, but transform our outcome to a binary variable. We’re also going to use python. Instead of predicting the final mark, we are going to try to predict whether students pass or fail. Let’s assume that all scores above 12.0 are a pass, and all below 12.0 are a fail.</p>
+<p>First, in R, create our dataset with our new binary outcome as a factor, and save these as csv files.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>math_student_class <span class="ot">&lt;-</span> math_student <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pf =</span> __) <span class="sc">%&gt;%</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>G3)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(math_student_class)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(math_student_class, <span class="st">"path_to_newdata_location"</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now, load these files into python. Transform our response into a category (if reloading via csv removed this formatting). Use <code>value_counts</code> to quickly examine how balanced our datasets are. I have written the code for you here, including one-hot encoding of categorical variables. This is required for some ML models in the scikit packages.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> OneHotEncoder</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.compose <span class="im">import</span> ColumnTransformer</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>math_student_class <span class="op">=</span> pd.read_csv(<span class="st">"data/math_student_class.csv"</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure 'pf' is really a Categorical</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>math_student_class[<span class="st">'pf'</span>] <span class="op">=</span> math_student_class[<span class="st">'pf'</span>].astype(<span class="st">'category'</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Separate features and target</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> math_student_class.drop(columns<span class="op">=</span><span class="st">"pf"</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> math_student_class[<span class="st">"pf"</span>].cat.codes  <span class="co"># pass=1, fail=0 if 'pf' is categorical, else map manually</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. One‑hot encode any categorical X columns</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>cat_cols <span class="op">=</span> X.select_dtypes(include<span class="op">=</span><span class="st">"object"</span>).columns.tolist()</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>encoder <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    [(<span class="st">"ohe"</span>, OneHotEncoder(drop<span class="op">=</span><span class="st">"first"</span>), cat_cols)],</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    remainder<span class="op">=</span><span class="st">"passthrough"</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>X_enc <span class="op">=</span> encoder.fit_transform(X)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We are ready to train a classifier! We are going to be evaluating our classifiers via ‘Accuracy’ today. As an additional exercise after part 4, you might want to try using alternative evaluation criteria.</p>
+<section id="logistic-regression" class="level3">
+<h3 class="anchored" data-anchor-id="logistic-regression">4.1 Logistic Regression</h3>
+<p>Now let’s fit a logistic regression model to predict passing or failing.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit logistic regression model</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>log_reg_class <span class="op">=</span> LogisticRegression(max_iter<span class="op">=</span><span class="dv">1000</span>)  <span class="co"># Increase max_iter if convergence warning</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>log_reg_class.fit(X_enc, y)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict in-sample</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>preds_logreg_class <span class="op">=</span> log_reg_class.predict(__)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And evaluate it’s performance…</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score, confusion_matrix, classification_report</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>lr_class_acc <span class="op">=</span> accuracy_score(__, preds_logreg_class)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Logistic Regression In‑sample Accuracy:"</span>, lr_class_acc)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion Matrix:</span><span class="ch">\n</span><span class="st">"</span>, confusion_matrix(y, preds_logreg_class))</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Classification Report:</span><span class="ch">\n</span><span class="st">"</span>, classification_report(y, preds_logreg_class))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="logistic-regression-w-polynomials-and-interaction" class="level3">
+<h3 class="anchored" data-anchor-id="logistic-regression-w-polynomials-and-interaction">4.2 Logistic Regression w/ Polynomials and Interaction</h3>
+<p>Now, just as before in the continuous outcome example, let’s add some polynomials and an interaction between <code>Medu</code> and <code>Fedu.</code> This would be simple in R, but the need for one-hot encoding with some python models means we need to do some additional data transformation. This is shown in the code below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a copy of the original dataframe to add new features</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>df2 <span class="op">=</span> math_student_class.copy()</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add polynomial &amp; interaction terms</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>df2[<span class="st">'absences_sq'</span>]   <span class="op">=</span> df2[<span class="st">'absences'</span>]  <span class="op">**</span> <span class="dv">2</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>df2[<span class="st">'studytime_sq'</span>]  <span class="op">=</span> df2[<span class="st">'studytime'</span>] <span class="op">**</span> <span class="dv">2</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>df2[<span class="st">'Medu_Fedu'</span>]     <span class="op">=</span> df2[<span class="st">'Medu'</span>] <span class="op">*</span> df2[<span class="st">'Fedu'</span>]</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Split into features &amp; target (y stays the same)</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>X2 <span class="op">=</span> df2.drop(columns<span class="op">=</span><span class="st">'pf'</span>)</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="co"># y is still df2['pf'].cat.codes, so we reuse y</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="co"># One‑hot encode original categoricals + pass through all numerics (incl. new)</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>cat_cols2 <span class="op">=</span> X2.select_dtypes(include<span class="op">=</span>[<span class="st">'object'</span>,<span class="st">'category'</span>]).columns.tolist()</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>encoder_poly <span class="op">=</span> ColumnTransformer(</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    [(<span class="st">"ohe"</span>, OneHotEncoder(drop<span class="op">=</span><span class="st">"first"</span>), cat_cols2)],</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>    remainder<span class="op">=</span><span class="st">"passthrough"</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>X_enc_poly <span class="op">=</span> encoder_poly.fit_transform(X2)</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df2.columns.difference(math_student_class.columns))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Follow the same pipeline as before - predict in-sample and evaluate via in-sample RMSE.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>log_reg_poly <span class="op">=</span> LogisticRegression(max_iter<span class="op">=</span><span class="dv">1000</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>log_reg_poly.fit(__, __)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>preds_logreg_poly <span class="op">=</span> log_reg_poly.predict(__)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>lr_polyint_class_acc <span class="op">=</span> accuracy_score(y, preds_logreg_poly)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co"># In‑sample evaluation</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">4.2 Poly+Interaction Logistic — In‑Sample Accuracy:"</span>, <span class="bu">round</span>(accuracy_score(y, preds_logreg_poly), <span class="dv">3</span>))</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Confusion Matrix:</span><span class="ch">\n</span><span class="st">"</span>, confusion_matrix(y, preds_logreg_poly))</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Classification Report:</span><span class="ch">\n</span><span class="st">"</span>, classification_report(y, preds_logreg_poly))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="naïve-bayes" class="level3">
+<h3 class="anchored" data-anchor-id="naïve-bayes">4.3 Naïve Bayes</h3>
+<p>Naïve (sometimes known as simple or idiot’s) Bayes is a probabilistic classifier based on Bayes’ theorem and the assumption of feature independence.</p>
+<p>In the code chunk below, we’ll fit a naïve bayes, predict in-sample, and evaluate predictive performance. Look how concisely we can do this in a single code chunk with python!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.naive_bayes <span class="im">import</span> GaussianNB</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score, confusion_matrix, classification_report</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert code here</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit Naïve Bayes on the entire dataset</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>nb_class <span class="op">=</span> GaussianNB()</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>nb_class.fit(X_enc, __)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="co"># In‑sample predictions</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>preds_nb_class <span class="op">=</span> nb_class.predict(__)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate in‑sample performance</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>nb_class_acc <span class="op">=</span> accuracy_score(y, __)</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Naïve Bayes In‑sample Accuracy:"</span>, nb_class_acc)</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion Matrix:</span><span class="ch">\n</span><span class="st">"</span>, confusion_matrix(y, preds_nb_class))</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Classification Report:</span><span class="ch">\n</span><span class="st">"</span>, classification_report(y, preds_nb_class))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Tomorrow, we will look at more ‘complex’ ML algorithms and examine how harnessing the power of these algorithms can boost model performance.</p>
+</section>
+<section id="model-selection-1" class="level3">
+<h3 class="anchored" data-anchor-id="model-selection-1">4.4 Model Selection</h3>
+<p>Which model is best now that we’re doing a binary classification? Remember, it’s technically the same data!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert code here</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Print raw accuracies</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Logistic Regression Accuracy:                </span><span class="sc">{</span>lr_class_acc<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Logistic Regression (Poly + Interaction):    </span><span class="sc">{</span>lr_polyint_class_acc<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Naïve Bayes Accuracy:                        </span><span class="sc">{</span>nb_class_acc<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Tabular comparison</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>acc_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Model"</span>: [</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Logistic Regression"</span>,</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Logistic Regression (Poly + Interaction)"</span>,</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Naïve Bayes"</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Accuracy"</span>: [lr_class_acc, lr_polyint_class_acc, nb_class_acc]</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Accuracy Comparison Table:"</span>)</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(acc_df)</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Highlight best model</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>best_idx   <span class="op">=</span> acc_df[<span class="st">"Accuracy"</span>].idxmax()</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>best_model <span class="op">=</span> acc_df.loc[best_idx, <span class="st">"Model"</span>]</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>best_score <span class="op">=</span> acc_df.loc[best_idx, <span class="st">"Accuracy"</span>]</span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Best performing model: </span><span class="sc">{</span>best_model<span class="sc">}</span><span class="ss"> (Accuracy = </span><span class="sc">{</span>best_score<span class="sc">:.3f}</span><span class="ss">)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question</strong>:</p>
+<ul>
+<li><p>How do the RMSE metrics relate to the accuracy metrics?</p></li>
+<li><p>Should we be using classification or regression to predict student grades?</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="by-the-end-of-this-seminar-you-should-be-able-to" class="level1">
+<h1>By the end of this seminar, you should be able to:</h1>
+<ul>
+<li><p>Understand ML as a ‘missing data’ problem,’</p></li>
+<li><p>Understand the differences between evaluation metrics and when to use them,</p></li>
+<li><p>Train unsupervised ML models for regression with R,</p></li>
+<li><p>Train unsupervised ML models for classification with Python,</p></li>
+<li><p>Use fitted models to predict in-sample,</p></li>
+<li><p>Make simple in-sample evaluations of model performance.</p></li>
+</ul>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>Cortez, P., &amp; Silva, A. M. G. (2008). <em>Using Data Mining to Predict Secondary School Student Performance</em>. In A. Brito &amp; J. Teixeira (Eds.), <em>Proceedings of 5th FUture BUsiness TEChnology Conference (FUBUTEC 2008)</em>, 5–12. Porto, Portugal: EUROSIS.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
