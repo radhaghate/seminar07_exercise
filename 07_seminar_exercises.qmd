@@ -385,7 +385,7 @@ Please load the `math_student.csv` file in this seminar's github repo with the `
 ```{r}
 # Load Data for regression in R
 # Enter code here
-math_student <- read.csv("/data/math_student.csv", sep = ",", header = TRUE) %>%
+math_student <- read.csv("data/math_student.csv", sep = ",", header = TRUE) %>%
 __(-__)
 
 __(math_student, 6)
