@@ -1,0 +1,772 @@
+---
+title: "Seminar 7: Core Machine Learning 1"
+subtitle: "LSE ME314: Introduction to Data Science and Machine Learning"
+date-modified: "15 July 2025" 
+toc: true
+format: html
+execute:
+  echo: true
+  eval: false
+---
+
+# Plan for Today
+
+Today, we're going to learn how to train supervised ML models for classification and regression. First, we will motivate prediction with ML as a 'missing data' problem. Next, we will focus on evaluation metrics and develop an understanding of the promises and pitfalls of different evaluation metrics and their suitability to different contexts. After this, we will look a simple 'regression' and 'classification' tasks and fit some models to achieve these ends. 
+
+The pipelines we will use today are *simple* by design, and we will begin to build in additional steps to make our classifiers 'robust' in the next seminar. Today, we will touch on (1) fitting models, (2) calculating in-sample evaluation metrics, and (3) in-sample model evaluation. Tomorrow, we will look a train/validation/test sets, cross-validation, regularisation, and other facets of robust ML.
+
+First, let's install and load our required R and python packages.
+
+```{r}
+# Install all required packages at once
+install.packages(c(
+  "tidyverse", "caret", "stats", "glmnet", 
+  "e1071", "pROC", "ggplot2", "plotROC", "reticulate", "Metrics", 
+  "titanic", "rpart", "mlbench", "patchwork", "rpart.plot", "MLmetrics"
+))
+```
+
+
+```{r}
+# Load all libraries in one go
+library(tidyverse)
+library(caret)
+library(stats)
+library(glmnet)
+library(e1071)
+library(pROC)
+library(ggplot2)
+library(plotROC)
+library(reticulate)
+library(Metrics)
+library(titanic)
+library(rpart)
+library(mlbench)
+library(patchwork)
+library(rpart.plot)
+library(MLmetrics)
+```
+
+And set our reticulate environment and working directory.
+
+```{r}
+# setwd("PATH_TO_GITHUB_REPO")
+setwd("INSERT PATH TO GITHUB REPO")
+getwd()
+
+library(reticulate)
+use_python("INSERT PATH TO PYTHON ENVIRON", required = TRUE)
+```
+
+And install the required python packages.
+
+```{python}
+# Install all required Python packages 
+import sys
+import subprocess
+
+print("Starting installation of Python packages...", flush=True)
+
+subprocess.check_call([
+    sys.executable, "-m", "pip", "install",
+    "numpy", "pandas", "matplotlib", "seaborn",
+    "scikit-learn", "pyLDAvis"
+])
+
+print("Ending installation of Python packages...", flush=True)
+
+```
+
+
+```{python}
+import numpy as np
+import pandas as pd
+
+import matplotlib
+import matplotlib.pyplot as plt
+
+import seaborn as sns
+
+import sklearn
+from sklearn import metrics
+
+import pyLDAvis
+
+print("All Python packages imported successfully.")
+```
+
+
+## Part 1: Intro to ML: Labelled and Unlabelled Data
+
+To get us familiar with the use cases for ML, we examine ML within the framework of a 'missing data' problem. We treat unknown response values as _truly missing_ and use predictive models to __impute__ those missing Y values from the observed feature values, rather than discarding or naively filling them. 
+
+```{r}
+mtcars_data <- read.csv("data/mtcars_missing.csv")
+
+str(mtcars_data)
+```
+
+Let's take our data and try to train a multivariate OLS model with `mpg` as the response and `wt` and `hp` as our explanatory variables.
+
+```{r}
+lm_model <- lm(formula = __, data = __, na.action = na.fail)
+lm_model
+```
+
+We just tried to train mpg ~ wt + hp, but got an error because some mpg values are missing. This illustrates a key distinction: We can fit supervised learning models of data when we know `Y.` This data is called 'labelled' data. We cannot directly train supervised learning models on data where we don't have the response labelled (such as when `Y = NA`). In ML, we often cast prediction as a *missing data* problem - we train models to fill in the Ys that we don't observe with the Xs we do. 
+
+Let's remove the NA rows, train a model, then use said model to predict on our unlabelled rows. 
+
+```{r}
+mtcars_labelled <- na.omit(mtcars_data)
+
+# Fit OLS on complete cases
+lm_model <- lm(mpg ~ wt + hp, data = mtcars_labelled)
+
+summary(lm_model)
+
+# Identify the rows we dropped (the unlabelled set)
+unlabelled_idx <- which(is.na(mtcars_data$mpg))
+unlabelled_df <- mtcars_data[unlabelled_idx, ]
+
+# Predict mpg for those missing rows
+predicted_mpg <- predict(lm_model, newdata = unlabelled_df)
+
+# Show the imputations
+data.frame(
+  car = rownames(unlabelled_df),
+  predicted_mpg = round(predicted_mpg, 2)
+)
+```
+
+Assuming our model is good enough, this solves the missing data problem! How, however, do we know if our model is good?
+
+
+## Part 2: Model Evaluation
+
+Data scientists and ML practitioners evaluate models using a variety of metrics, each targeting different aspects of model performance. Depending on the application, some parts of the prediction space may matter more than others. For example, a loan provider might be more concerned about approving a loan to someone who cannot repay (a *false positive*) than about mistakenly rejecting a creditworthy applicant (a *false negative*). In such cases, they may prioritize *precision* over *recall* — or, equivalently, aim for a *low false positive rate* (high *specificity*). Different contexts call for different evaluation priorities, and we can integrate these preferences directly into our training pipelines so that ML models optimize for them explicitly.
+
+For classification tasks, the most common evaluation metrics are:
+
+- **Accuracy**  
+  \- The fraction of total predictions that are correct:  
+  $$
+  \frac{TP + TN}{TP + TN + FP + FN}
+  $$
+
+- **F1‑Score**  
+  \- Harmonic mean of precision and recall:  
+  $$
+  2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+  $$
+
+- **Precision** (Positive Predictive Value)  
+  \- Fraction of predicted positives that are true positives:  
+  $$
+  \frac{TP}{TP + FP}
+  $$
+
+- **Recall** (Sensitivity, True Positive Rate)  
+  \- Fraction of actual positives that are correctly identified:  
+  $$
+  \frac{TP}{TP + FN}
+  $$
+
+- **Specificity** (True Negative Rate)  
+  \- Fraction of actual negatives that are correctly identified:  
+  $$
+  \frac{TN}{TN + FP}
+  $$
+
+- **Sensitivity**  
+  \- Synonym for recall (True Positive Rate).
+
+- **ROC‑AUC**  
+  \- Area under the ROC curve, measuring discrimination across all thresholds  
+  (i.e., the probability that a randomly chosen positive instance is ranked higher than a randomly chosen negative instance).
+
+To motivate the use of different evaluation metrics, I provide an example below where our ML model is faced with a binary classification task and __always__ picks 1 (from 0 or 1). In general, we wouldn't consider this a 'good' model, as it does not use information about our observations (in the form of features) to guide classification. 
+
+```{python}
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score, roc_curve, auc
+
+# Simulate data
+np.random.seed(42)
+n_samples = 1000
+X = np.random.randn(n_samples, 2)
+y = np.random.choice([1, 0], size=n_samples, p=[0.9, 0.1])
+
+# Always guesses 1! 
+y_pred = np.ones_like(y)
+
+# Compute metrics
+acc   = accuracy_score(y, y_pred)
+prec  = precision_score(y, y_pred, zero_division=0)
+rec   = recall_score(y, y_pred)
+f1    = f1_score(y, y_pred)
+auc   = roc_auc_score(y, y_pred)
+
+print(f"Accuracy : {acc:.3f}")
+print(f"Precision: {prec:.3f}") # of all predicted positives, 90.6% are truly positive
+print(f"Recall   : {rec:.3f}") # We catch all the true positives (but catch none of the negatives)
+print(f"F1 Score : {f1:.3f}") # Harmonic mean of precision & recall, deceptively high
+print(f"ROC‑AUC  : {auc:.3f}")   # 0.5 → no discrimination ability
+
+# Confusion matrix & specificity
+cm = confusion_matrix(y, y_pred, labels=[0,1])
+tn, fp, fn, tp = cm.ravel()
+
+specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
+print(f"\nTrue Negatives (TN): {tn}")
+print(f"False Positives (FP): {fp}")
+print(f"Specificity: {specificity:.3f}")  # Complete lack of ability to detect negatives
+```
+
+At first glance the accuracy (0.906), precision (0.906), recall (1.00), and F1-score (0.951) all look extremely strong. If we simply used these metrics to guide our model choice, we might be led to believe this classifier can easily distinguish between positive and negative cases. 
+
+**Questions**:
+
+- What is the *specificity* of our model? How do we interpret this?
+
+- What is the *ROC-AUC* for our model? How do we interpret this?
+
+Upon inspection of the specificity score (0.00), we notice a complete lack of ability to detect negative cases. Furthermore, our ROC-AUC of 0.5 tells us that our model has no discriminatory ability - it can't tell the difference between observations that are 0 or 1, because it always guesses 1! The fact that our dataset is highly imbalanced has masked this reality, and the resulting high accuracy score is an artefact of this context. 
+
+**Question:**
+
+-  Would you consider this a 'good' model?
+
+
+#### Exercise 1
+
+Now we're going to follow our own classification pipeline in python, and calculate evaluation metrics manually. First, we'll use a balanced dataset. After this, we'll look at an imbalanced dataset. The `tn`, `fp`, `fn` and `tp` objects outputted from the `confusion_matrix` function contain the number of true negatives, false positives, false negatives, and true positives, respectively. Please fill in the missing arguments in the code chunk below and answer the questions that follow.
+
+```{python}
+from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, roc_curve, auc
+import matplotlib.pyplot as plt
+
+# Load Iris and select only Versicolor vs Virginica
+iris = load_iris()
+mask = iris.target != 0
+X = iris.data[mask]
+y = iris.target[mask] - 1   # 0 = Versicolor, 1 = Virginica
+
+# Fit on the entire dataset
+clf = LogisticRegression(solver='liblinear', random_state=42)
+clf.fit(__, __)
+
+# In‑sample predictions & scores
+y_pred  = clf.predict(X)
+y_score = clf.predict_proba(X)[:, 1]  # probability for class=1
+
+# Confusion matrix
+tn, fp, fn, tp = confusion_matrix(y, y_pred, labels=[0,1]).ravel()
+print("Confusion matrix (in‑sample):")
+print(f" TN={tn}, FP={fp}, FN={fn}, TP={tp}\n")
+
+# Manual metric calculations
+accuracy    = (__ + __) / (__ + __ + __ + __)
+precision   = __ / (__ + __) if (__ + __) else 0.0
+recall      = __ / (__ + __) if (__ + __) else 0.0
+specificity = __ / (__ + __) if (__ + __) else 0.0
+f1          = 2 * (__ * __) / (__ + __) if (__ + __) else 0.0
+
+print(f"Accuracy    = {accuracy:.3f}")
+print(f"Precision   = {precision:.3f}")
+print(f"Recall      = {recall:.3f}")
+print(f"Specificity = {specificity:.3f}")
+print(f"F1 Score    = {f1:.3f}\n")
+
+# Compute ROC curve and AUC in‑sample
+fpr, tpr, thresholds = roc_curve(y, y_score, pos_label=1)
+roc_auc = auc(fpr, tpr)
+print(f"AUC (ROC)   = {roc_auc:.3f}")
+
+# Plot ROC
+plt.figure()
+plt.plot(fpr, tpr, label=f'ROC (AUC = {roc_auc:.3f})')
+plt.plot([0,1], [0,1], 'k--', label='Chance')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (In‑Sample)')
+plt.legend(loc='lower right')
+plt.show()
+```
+
+**Questions:**
+
+- How do you interpret these results? Is accuracy a good way to evaluate our model on this data? 
+
+- What is the relationship between accuracy and ROC-AUC here? What does this tell us about our chosen decision boundary of 0.5?
+
+Now, let's try the same thing with a dataset that is class-imbalanced. 
+
+```{python}
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, roc_curve, auc
+
+# Simulate imbalanced data (90% class 0, 10% class 1)
+X, y = make_classification(
+    n_samples=1000,
+    n_features=20,
+    n_informative=2,
+    n_redundant=15,
+    n_clusters_per_class=1,
+    weights=[0.9, 0.1],
+    class_sep=0.5,
+    flip_y=0.05,
+    random_state=42
+)
+
+# Fit on the entire dataset
+clf = LogisticRegression(solver='liblinear', random_state=42)
+clf.fit(__, __)
+
+# In‑sample predictions & scores
+y_pred  = clf.predict(X)
+y_score = clf.predict_proba(X)[:, 1]  # probability for class=1
+
+# Confusion matrix (in‑sample)
+tn, fp, fn, tp = confusion_matrix(y, y_pred, labels=[0,1]).ravel()
+print("Confusion matrix (in‑sample):")
+print(f" TN={tn}, FP={fp}, FN={fn}, TP={tp}\n")
+```
+
+
+```{r}
+# Manual metric calculations
+accuracy    = (__ + __) / (__ + __ + __ + __)
+precision   = __ / (__ + __) if (__ + __) else 0.0
+recall      = __ / (__ + __) if (__ + __) else 0.0
+specificity = __ / (__ + __) if (__ + __) else 0.0
+f1          = 2 * (__ * __) / (__ + __) if (__ + __) else 0.0
+
+print(f"Accuracy    = {accuracy:.3f}")
+print(f"Precision   = {precision:.3f}")
+print(f"Recall      = {recall:.3f}")
+print(f"Specificity = {specificity:.3f}")
+print(f"F1 Score    = {f1:.3f}\n")
+
+# Compute ROC curve and AUC (in‑sample)
+fpr, tpr, thresholds = roc_curve(y, y_score, pos_label=1)
+roc_auc = auc(fpr, tpr)
+print(f"AUC (ROC)   = {roc_auc:.3f}")
+
+# Plot ROC
+plt.figure()
+plt.plot(fpr, tpr, label=f'ROC (AUC = {roc_auc:.3f})')
+plt.plot([0,1], [0,1], 'k--', label='Chance')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve (In‑Sample, Imbalanced Data)')
+plt.legend(loc='lower right')
+plt.show()
+```
+
+**Questions:**
+
+- How do you interpret these results? 
+
+- Which evaluation metric would you use given what you know about the data? Why? 
+
+
+## Part 3: Load and Inspect Data
+
+We're going to be working with one dataset for the rest of today. However, we are going to perform transformations to this dataset during the seminar that allow us to explore both classification and regression tasks. This dataset, originally sourced from the UCI Machine Learning Repository, concerns student performance in mathematics. It provides detailed insights into both the academic performance and potentially important socio-demographic characteristics and attributes of students (Cortez & Silva, 2008). Today, we will use information about these students and their behaviours to predict their final grade. We will separate the seminar's exercise today into R and Python. We will start with R for regression and follow this with Python for binary classification after performing some data transformation on our outcome of interest. 
+
+First, read the 'About Dataset' section in: https://www.kaggle.com/datasets/adilshamim8/math-students?resource=download to familiarise yourself with our outcome (G3) and features (Shamim, 2022). 
+
+Please load the `math_student.csv` file in this seminar's github repo with the `read.csv()` R function and remove the second-period grade variable `(G2)` using the `tidyverse`. *hint*: `select()` should work! Name this dataframe math_student Use `head()` and `str()` to examine the structure of the data. What do you notice? 
+
+```{r}
+# Load Data for regression in R
+# Enter code here
+math_student <- read.csv("/data/math_student.csv", sep = ",", header = TRUE) %>%
+__(-__)
+
+__(math_student, 6)
+__(math_student)
+```
+
+Next, transform __all__ character features to factors and use `str()` to re-examine the data. Are all character features converted to factors?
+
+```{r}
+# Enter code here
+math_student <- math_student %>%
+  __(across(where(is.character), as.__))
+
+__(math_student)
+```
+
+
+## Part 3: Regression (Continuous Outcome Prediction)
+
+Here, we will use R to perform regression on a continuous outcome (the final grades obtained by the students in our dataset). Our objective is to predict our response variable with as minimal error as possible by using information stored in the features. 
+
+*Note:* There will be no train/validation/test splits today. Instead, we will focus on training models with our available data and look at how we can make these models more robust with validation and out-of-sample evaluation in tomorrow's seminar. 
+
+*Note:* There will be no hyperparameter tuning during today's seminar, and all hyperparameters will be left at their default value. Tomorrow, we will learn how to optimise these models via hyperparameter tuning with k-fold crossvalidation!
+
+
+### 3.1 Predicting with the mean
+
+To establish a baseline for model performance, we're going to predict with the mean value of `G3,` our response variable, and calculate the RMSE by hand. The models that follow this therefore illustrate the effect of including additional information from features into our modelling and prediction process.
+
+```{r}
+mean_G3    <- mean(__)
+
+# Build constant predictions (same length as data)
+preds_mean <- rep(mean_G3, nrow(math_student))
+
+errors <- math_student$G3 - preds_mean
+
+# Compute in‑sample RMSE for the mean predictor
+mean_cont_rmse  <- sqrt(mean(errors^2))
+
+# Report the result
+cat("Baseline (mean) predictor In‑sample RMSE: ", round(__, 2), "\n")
+```
+
+
+### 3.2 Multiple Linear Regression
+
+We're going to begin with a linear model in the form of multiple linear regression. This can be operationalised in R with a single line of code. Use the `lm()` function and the formula argument (rather than X and y) to fit a multiple linear regression model below. Name the model `lm_cont` and examine it's coefficient with `summary()`.
+
+```{r}
+# Enter code here
+# ?lm()
+
+lm_cont <- lm(formula = __, data = math_student)
+
+summary(__)
+```
+
+**Question**:
+
+- How many of the coefficients are statistically significant? 
+
+Next, use the `predict()` function with the `newdata = math_student` argument to make in-sample predictions with your model. Name these predictions `preds_lm_cont`. Remember, this is predicting on data that your model has already been trained on, so it should perform well! Tomorrow, we look at 'best practice' out-of-sample performance. After this, use the `rmse()` function in the `Metrics` package to calculate the in-sample RMSE. How well do you think our model did? Assign the rmse value to an object titled `lm_cont_rmse`.
+
+```{r}
+# Enter code here
+__ <- predict(lm_cont, newdata = __)
+
+# Compute in‐sample RMSE
+y_true <- math_student$G3
+lm_cont_rmse <- Metrics::rmse(test_y, preds_lm_cont)
+paste0("OLS In-sample RMSE: ", round(lm_cont_rmse, 2))
+```
+
+
+### 3.3 OLS with nonlinearities and interactions
+
+Now, we're going to induce some nonlinearities, in the form of quadratic transformations, and an interaction between `Medu` and `Fedu.` If these complexities exist within the data, we should get improved performance. Name the model `lm_poly_int_cont.`
+
+```{r}
+# Enter code here
+
+# ?lm()
+lm_poly_int_cont <- lm(
+  G3 ~ . 
+    + I(absences^2)        # capture non‑linear effect of absences
+    + I(studytime^2)       # capture non‑linear effect of study time
+    + __:__,           # interaction of parents' education
+  data = __
+)
+
+summary(lm_poly_int_cont)
+```
+
+We now have our model which includes polynomials and interactions. Predict in-sample and compute the rmse - name the rmse object `lm_nonl_int_cont_rmse.`
+
+```{r}
+# In‐sample predictions & RMSE
+preds_lm_poly_int <- predict(__, newdata = __)
+lm_nonl_int_cont_rmse   <- Metrics::rmse(math_student$G3, __)
+
+cat(
+  "Polynomial+Interaction OLS In‑sample RMSE: ", 
+  round(__, 2), "\n"
+)
+```
+
+**Questions**:
+
+- How many of the additional coefficients are statistically significant?
+
+- What does our in-sample RMSE compare to the OLS model that did _not_ include nonlinearities and interactions?
+
+
+### 3.4 LASSO Regression
+
+Now, we're going to fit and evaluate a LASSO regression model. LASSO penalises the sum of absolute values of coefficients (L1 penalty) to reduce overfitting. Variables that the algorithm deems unimportant will have their coefficient values reduced to 0. For this, we will use the `glmnet` library. 
+
+To use LASSO regression with `glmnet`, we need our explanatory variables to be in matrix format. Transform `math_student` and using the `as.matrix()` function. 
+
+```{r}
+# Insert code here
+y <- math_student$G3
+math_student_matrix <- model.matrix(G3 ~ . -1, data = math_student)
+```
+
+What value do we use for the `alpha` argument when we call the `glmnet()` function? Alpha differentiates between whether we want to use LASSO or ridge regression.  Fit a LASSO model using `glmnet` and name the model `lasso_cont`.
+
+```{r}
+library(glmnet)
+?glmnet()
+
+lasso_cont <- glmnet(math_student_matrix, train_y, alpha = __)
+
+plot(lasso_cont)
+
+coef(__, s = 1.0)
+```
+
+**Questions**:
+
+- Examine the plot generated by `plot(lasso_cont)`, what is going on here? 
+
+- Which coefficients are good 'predictors' of final grade, according to your model where `lambda` is equal to 1? 
+
+- Would there be more or less non-zero coefficients as you increase the value of `lambda`?
+
+Now it's time to make some predictions with our LASSO model and evaluate it's performance! We're going to be using a `lambda` value of 1 for the sake of today's seminar. However, the argument is not called `lambda` in the function! Tomorrow, we'll learn how to identify the best value of lambda when we optimise our hyperparameters. Similar to before with our linear regression, use the `predict()` function with `newx = math_student_matrix` and make sure the object, named `preds_lasso_cont`, is a numeric vector. 
+
+```{r}
+preds_lasso_cont <- predict(__, newx = __, s = 1.0) %>%
+                    as.vector() 
+
+
+lasso_cont_rmse <- rmse(__, __)
+
+paste0("LASSO in-sample RMSE is ", lasso_cont_rmse)
+```
+
+
+### 3.5 Model Selection
+
+We now have 4 models to choose from! Which model is the best at predicting students final marks? Compare your rmse objects to decide. 
+
+```{r}
+model_rmse <- data.frame(
+  Model = c("Mean", "Linear Regression", "Linear w/ Polys & Ints", "LASSO"),
+  RMSE = c(mean_cont_rmse,lm_cont_rmse, lm_nonl_int_cont_rmse, lasso_cont_rmse)
+)
+
+print(model_rmse)
+```
+
+**Question**: 
+
+- Which model minimises our in-sample RMSE? Why do you think this is?
+
+
+## Part 4: Classification (Binary Classification)
+
+For this classification task we're going to use the same data, but transform our outcome to a binary variable. We're also going to use python. Instead of predicting the final mark, we are going to try to predict whether students pass or fail. Let's assume that all scores above 12.0 are a pass, and all below 12.0 are a fail. 
+
+First, in R, create our dataset with our new binary outcome as a factor, and save these as csv files. 
+
+```{r}
+math_student_class <- math_student %>%
+  mutate(pf = __) %>%
+  select(-G3)
+
+str(math_student_class)
+
+write.csv(math_student_class, "path_to_newdata_location", row.names = FALSE)
+
+```
+
+Now, load these files into python. Transform our response into a category (if reloading via csv removed this formatting). Use `value_counts` to quickly examine how balanced our datasets are. I have written the code for you here, including one-hot encoding of categorical variables. This is required for some ML models in the scikit packages.
+
+```{python}
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+
+math_student_class = pd.read_csv("data/math_student_class.csv")
+
+# Ensure 'pf' is really a Categorical
+math_student_class['pf'] = math_student_class['pf'].astype('category')
+
+# 2. Separate features and target
+X = math_student_class.drop(columns="pf")
+y = math_student_class["pf"].cat.codes  # pass=1, fail=0 if 'pf' is categorical, else map manually
+
+# 3. One‑hot encode any categorical X columns
+cat_cols = X.select_dtypes(include="object").columns.tolist()
+encoder = ColumnTransformer(
+    [("ohe", OneHotEncoder(drop="first"), cat_cols)],
+    remainder="passthrough"
+)
+
+X_enc = encoder.fit_transform(X)
+```
+
+We are ready to train a classifier! We are going to be evaluating our classifiers via 'Accuracy' today. As an additional exercise after part 4, you might want to try using alternative evaluation criteria. 
+
+
+### 4.1 Logistic Regression
+
+Now let's fit a logistic regression model to predict passing or failing. 
+
+```{python}
+from sklearn.linear_model import LogisticRegression
+```
+
+
+```{python}
+# Fit logistic regression model
+log_reg_class = LogisticRegression(max_iter=1000)  # Increase max_iter if convergence warning
+log_reg_class.fit(X_enc, y)
+
+# Predict in-sample
+preds_logreg_class = log_reg_class.predict(__)
+```
+
+And evaluate it's performance...
+
+```{python}
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+lr_class_acc = accuracy_score(__, preds_logreg_class)
+print("Logistic Regression In‑sample Accuracy:", lr_class_acc)
+print("Confusion Matrix:\n", confusion_matrix(y, preds_logreg_class))
+print("Classification Report:\n", classification_report(y, preds_logreg_class))
+```
+
+
+### 4.2 Logistic Regression w/ Polynomials and Interaction
+
+Now, just as before in the continuous outcome example, let's add some polynomials and an interaction between `Medu` and `Fedu.` This would be simple in R, but the need for one-hot encoding with some python models means we need to do some additional data transformation. This is shown in the code below. 
+
+```{python}
+# Create a copy of the original dataframe to add new features
+df2 = math_student_class.copy()
+
+# Add polynomial & interaction terms
+df2['absences_sq']   = df2['absences']  ** 2
+df2['studytime_sq']  = df2['studytime'] ** 2
+df2['Medu_Fedu']     = df2['Medu'] * df2['Fedu']
+
+# Split into features & target (y stays the same)
+X2 = df2.drop(columns='pf')
+# y is still df2['pf'].cat.codes, so we reuse y
+
+# One‑hot encode original categoricals + pass through all numerics (incl. new)
+cat_cols2 = X2.select_dtypes(include=['object','category']).columns.tolist()
+encoder_poly = ColumnTransformer(
+    [("ohe", OneHotEncoder(drop="first"), cat_cols2)],
+    remainder="passthrough"
+)
+
+X_enc_poly = encoder_poly.fit_transform(X2)
+
+print(df2.columns.difference(math_student_class.columns))
+```
+
+Follow the same pipeline as before - predict in-sample and evaluate via in-sample RMSE.
+
+```{python}
+log_reg_poly = LogisticRegression(max_iter=1000, random_state=42)
+log_reg_poly.fit(__, __)
+
+preds_logreg_poly = log_reg_poly.predict(__)
+
+lr_polyint_class_acc = accuracy_score(y, preds_logreg_poly)
+
+# In‑sample evaluation
+print("\n4.2 Poly+Interaction Logistic — In‑Sample Accuracy:", round(accuracy_score(y, preds_logreg_poly), 3))
+print("\nConfusion Matrix:\n", confusion_matrix(y, preds_logreg_poly))
+print("\nClassification Report:\n", classification_report(y, preds_logreg_poly))
+```
+
+
+### 4.3 Naïve Bayes
+
+Naïve (sometimes known as simple or idiot's) Bayes is a probabilistic classifier based on Bayes’ theorem and the assumption of feature independence. 
+
+In the code chunk below, we'll fit a naïve bayes, predict in-sample, and evaluate predictive performance. Look how concisely we can do this in a single code chunk with python!
+
+```{python}
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Insert code here
+# Fit Naïve Bayes on the entire dataset
+nb_class = GaussianNB()
+nb_class.fit(X_enc, __)
+
+# In‑sample predictions
+preds_nb_class = nb_class.predict(__)
+
+# Evaluate in‑sample performance
+nb_class_acc = accuracy_score(y, __)
+print("Naïve Bayes In‑sample Accuracy:", nb_class_acc)
+print("Confusion Matrix:\n", confusion_matrix(y, preds_nb_class))
+print("Classification Report:\n", classification_report(y, preds_nb_class))
+```
+
+Tomorrow, we will look at more 'complex' ML algorithms and examine how harnessing the power of these algorithms can boost model performance.
+
+
+### 4.4 Model Selection
+
+Which model is best now that we're doing a binary classification? Remember, it's technically the same data!
+
+```{python}
+# Insert code here
+# Print raw accuracies
+print(f"Logistic Regression Accuracy:                {lr_class_acc:.3f}")
+print(f"Logistic Regression (Poly + Interaction):    {lr_polyint_class_acc:.3f}")
+print(f"Naïve Bayes Accuracy:                        {nb_class_acc:.3f}")
+
+# Tabular comparison
+acc_df = pd.DataFrame({
+    "Model": [
+        "Logistic Regression",
+        "Logistic Regression (Poly + Interaction)",
+        "Naïve Bayes"
+    ],
+    "Accuracy": [lr_class_acc, lr_polyint_class_acc, nb_class_acc]
+})
+print("\nAccuracy Comparison Table:")
+print(acc_df)
+
+# Highlight best model
+best_idx   = acc_df["Accuracy"].idxmax()
+best_model = acc_df.loc[best_idx, "Model"]
+best_score = acc_df.loc[best_idx, "Accuracy"]
+print(f"\nBest performing model: {best_model} (Accuracy = {best_score:.3f})")
+```
+
+
+**Question**: 
+
+- How do the RMSE metrics relate to the accuracy metrics?
+
+- Should we be using classification or regression to predict student grades?
+
+
+# By the end of this seminar, you should be able to:
+
+- Understand ML as a 'missing data' problem,'
+
+- Understand the differences between evaluation metrics and when to use them,
+
+- Train unsupervised ML models for regression with R,
+
+- Train unsupervised ML models for classification with Python,
+
+- Use fitted models to predict in-sample, 
+
+- Make simple in-sample evaluations of model performance.
+
+
+## References
+
+Cortez, P., & Silva, A. M. G. (2008). *Using Data Mining to Predict Secondary School Student Performance*. In A. Brito & J. Teixeira (Eds.), *Proceedings of 5th FUture BUsiness TEChnology Conference (FUBUTEC 2008)*, 5–12. Porto, Portugal: EUROSIS.
